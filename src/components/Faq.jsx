@@ -41,8 +41,8 @@ const PANELS = [
     <div className="qa-who">
       <div className="qa-fh qa-in" style={{ '--d': 0 }}>FH</div>
       <div className="qa-in" style={{ '--d': 1 }}>
-        <p className="qa-big">Funny<br />creator.</p>
-        <p className="qa-sub">Ads people actually finish watching.</p>
+        <p className="qa-big">Funny<br />first.</p>
+        <p className="qa-sub">Ads people finish watching, and share.</p>
       </div>
       <div className="qa-logos qa-in" style={{ '--d': 2 }}>
         {PLATFORMS.map((p, i) => <LogoChip key={p.name} src={p.logo} name={p.name} d={i} />)}
