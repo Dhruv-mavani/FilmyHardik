@@ -6,6 +6,8 @@ import Reveal from './Reveal';
 import Arrow from './Arrow';
 
 const AUTO_MS = 7000;
+const STEP_VH = 55;   // scroll distance per tab in pinned (desktop) mode
+const PIN_TOP = 96;   // px below the fixed nav
 
 /** Counts up from 0 each time a panel opens. Server/first paint shows the final value. */
 function CountUp({ to, suffix = '' }) {
@@ -80,7 +82,7 @@ const PANELS = [
   ),
   // Biggest
   () => (
-    <div className="qa-stack">
+    <div className="qa-camps">
       {[['Head & Shoulders', 9, '100%', 'Biggest one yet'], ['Red Label Chai', 4, '91%', 'One campaign']].map(([name, n, w, note], i) => {
         const b = brand(name);
         return (
@@ -102,9 +104,9 @@ const PANELS = [
       <p className="qa-big qa-in" style={{ '--d': 0 }}>Send<br />the brief.</p>
       <p className="qa-sub qa-in" style={{ '--d': 1 }}>Get an idea people actually want to share.</p>
       <div className="qa-actions">
-        <a className="qa-act solid qa-in" style={{ '--d': 2 }} href="#contact"><span><small className="mono">Form</small>Send a brief</span><Arrow dir="ur" /></a>
-        <a className="qa-act qa-in" style={{ '--d': 3 }} href={`mailto:${EMAIL}`}><span><small className="mono">Email</small>{EMAIL}</span><Arrow dir="ur" /></a>
-        <a className="qa-act qa-in" style={{ '--d': 4 }} href={PHONE_HREF}><span><small className="mono">Call</small>{PHONE_TEXT}</span><Arrow dir="ur" /></a>
+        <a className="qa-act solid qa-in qa-act-form" style={{ '--d': 2 }} href="#contact"><span><small className="mono">Form</small>Send a brief</span><Arrow dir="ur" /></a>
+        <a className="qa-act qa-in qa-act-mail" style={{ '--d': 3 }} href={`mailto:${EMAIL}`}><span><small className="mono">Email</small>{EMAIL}</span><Arrow dir="ur" /></a>
+        <a className="qa-act qa-in qa-act-call" style={{ '--d': 4 }} href={PHONE_HREF}><span><small className="mono">Call</small>{PHONE_TEXT}</span><Arrow dir="ur" /></a>
       </div>
     </div>
   ),
@@ -128,9 +130,13 @@ export default function Faq() {
   const [active, setActive] = useState(0);
   const [auto, setAuto] = useState(false);
   const [paused, setPaused] = useState(false);
+  const [pinned, setPinned] = useState(false);
   const list = useRef(null);
   const tabs = useRef([]);
   const swipe = useRef(null);
+  const track = useRef(null);
+  const pin = useRef(null);
+  const [pinH, setPinH] = useState(560);
   const n = FAQ.length;
 
   // Autoplay only with a real pointer (hover) and motion allowed; any manual choice stops it for good.
@@ -139,8 +145,50 @@ export default function Faq() {
     setAuto(canHover && !prefersReducedMotion());
   }, []);
 
+  // Desktop: the deck pins to the screen and scrolling steps through the tabs (scrollytelling).
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const mq = window.matchMedia('(min-width: 901px) and (hover: hover)');
+    const on = () => setPinned(mq.matches && !prefersReducedMotion());
+    on();
+    mq.addEventListener('change', on);
+    return () => mq.removeEventListener('change', on);
+  }, []);
+
+  useEffect(() => {
+    if (!pinned) return;
+    setAuto(false);
+    const ro = new ResizeObserver(() => pin.current && setPinH(pin.current.offsetHeight));
+    ro.observe(pin.current);
+    let raf = 0, idx = -1;
+    const update = () => {
+      raf = 0;
+      const t = track.current, el = pin.current;
+      if (!t || !el) return;
+      const dist = t.offsetHeight - el.offsetHeight;
+      const p = dist > 0 ? Math.min(1, Math.max(0, (PIN_TOP - t.getBoundingClientRect().top) / dist)) : 0;
+      const f = Math.min(n - 1e-6, p * n);
+      const i = Math.floor(f);
+      el.style.setProperty('--seg', (f - i).toFixed(3)); // fills the active tab's bar, no React render per frame
+      if (i !== idx) { idx = i; setActive(i); }
+    };
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(update); };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => { ro.disconnect(); cancelAnimationFrame(raf); window.removeEventListener('scroll', onScroll); window.removeEventListener('resize', onScroll); };
+  }, [pinned, n]);
+
   const go = (i, manual = true) => {
-    setActive((i + n) % n);
+    const k = (i + n) % n;
+    if (pinned && track.current && pin.current) {
+      // pinned mode: the scroll position is the source of truth, so jump to that tab's slice of the track
+      const dist = track.current.offsetHeight - pin.current.offsetHeight;
+      const top = track.current.getBoundingClientRect().top + window.scrollY - PIN_TOP + ((k + 0.5) / n) * dist;
+      window.scrollTo({ top, behavior: 'smooth' });
+      return;
+    }
+    setActive(k);
     if (manual) setAuto(false);
   };
 
@@ -176,13 +224,16 @@ export default function Faq() {
           <h2 id="faq-title">Good to<br />know</h2>
         </Reveal>
 
+        <div className={`qa-scroll${pinned ? ' pinned' : ''}`} ref={track} style={pinned ? { height: `calc(${pinH}px + ${n * STEP_VH}vh)` } : undefined}>
         <div
+          ref={pin}
           className={`qa${paused ? ' paused' : ''}`}
           onPointerEnter={(e) => e.pointerType === 'mouse' && setPaused(true)}
           onPointerLeave={() => setPaused(false)}
           onFocus={() => setPaused(true)}
           onBlur={() => setPaused(false)}
         >
+          <div className="qa-side">
           <div className="qa-tabs" role="tablist" aria-label="Questions" aria-orientation="vertical" ref={list} onKeyDown={onKey}>
             {FAQ.map((f, i) => (
               <button
@@ -199,9 +250,12 @@ export default function Faq() {
               >
                 <span className="qa-n mono">{String(i + 1).padStart(2, '0')}</span>
                 <span className="qa-l">{LABELS[i]}</span>
-                {auto && active === i && <i className="qa-bar" style={{ '--ms': `${AUTO_MS}ms` }} onAnimationEnd={() => go(active + 1, false)} />}
+                {pinned && active === i && <i className="qa-bar qa-seg" />}
+                {auto && !pinned && active === i && <i className="qa-bar" style={{ '--ms': `${AUTO_MS}ms` }} onAnimationEnd={() => go(active + 1, false)} />}
               </button>
             ))}
+          </div>
+          {pinned && <p className="qa-hint mono" aria-hidden="true">Keep scrolling to flip through</p>}
           </div>
 
           <div className="qa-stage" onPointerDown={onDown} onPointerUp={onUp} onPointerCancel={() => (swipe.current = null)}>
@@ -215,13 +269,16 @@ export default function Faq() {
                     <summary className="mono">Full answer</summary>
                     <p>{f.a}</p>
                   </details>
-                  <button type="button" className="qa-next mono" onClick={() => go(i + 1)}>
-                    Next: {LABELS[(i + 1) % n]} <Arrow />
-                  </button>
+                  {!(pinned && i === n - 1) && (
+                    <button type="button" className="qa-next mono" onClick={() => go(i + 1)}>
+                      Next: {LABELS[(i + 1) % n]} <Arrow />
+                    </button>
+                  )}
                 </div>
               );
             })}
           </div>
+        </div>
         </div>
       </div>
     </section>
