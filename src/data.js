@@ -1,3 +1,5 @@
+import { LOGO_SIZES } from './logoSizes';
+
 export const EMAIL = 'filmyyhardik@gmail.com';
 export const PHONE_HREF = 'tel:+918733064171';
 export const PHONE_TEXT = '+91 87330 64171';
@@ -5,28 +7,29 @@ export const PHONE_TEXT = '+91 87330 64171';
 export const SECTIONS = ['top', 'numbers', 'platforms', 'brands', 'contact'];
 export const RAIL_LABELS = { top: 'Top', numbers: 'Numbers', platforms: 'Platforms', brands: 'Brands', contact: 'Contact' };
 
-const L = (file) => `/logos/ticker/${file}.png`;
+const L = (file) => `/logos/ticker/${file}.webp`;
+const SZ = (file) => ({ w: LOGO_SIZES[file][0], h: LOGO_SIZES[file][1] });
 
 export const TICKER_BRANDS = [
-  { name: 'Head & Shoulders', logo: L('head-and-shoulders') },
-  { name: 'Red Label Chai', logo: L('red-label-chai') },
-  { name: 'Rapido', logo: L('rapido') },
-  { name: 'Mamaearth', logo: L('mamaearth') },
-  { name: 'Jio Hotstar', logo: L('jio-hotstar') },
-  { name: 'The Solved Skin', logo: L('the-solved-skin') },
-  { name: 'Garnier Men', logo: L('garnier-men') },
-  { name: 'Hajmola', logo: L('hajmola') },
-  { name: 'Bigboss Season 18', logo: L('bigboss-season-18') },
-  { name: 'ChatGPT', logo: L('chatgpt') },
-  { name: 'The Bear House', logo: L('the-bear-house') },
-  { name: 'BruGold Coffee', logo: L('brugold-badge2'), scale: 0.9 },
-  { name: 'Atomberg', logo: L('atomberg') },
-  { name: 'Loyka', logo: L('loyka') },
-  { name: 'DTDC Courier', logo: L('dtdc-courier') },
-  { name: 'UP Warriorz', logo: L('up-warriorz') },
-  { name: 'Zouk', logo: L('zouk') },
-  { name: 'Realme', logo: L('realme') },
-  { name: 'Myntra Creator School', logo: L('myntra-creator-school') },
+  { name: 'Head & Shoulders', logo: L('head-and-shoulders'), ...SZ('head-and-shoulders') },
+  { name: 'Red Label Chai', logo: L('red-label-chai'), ...SZ('red-label-chai') },
+  { name: 'Rapido', logo: L('rapido'), ...SZ('rapido') },
+  { name: 'Mamaearth', logo: L('mamaearth'), ...SZ('mamaearth') },
+  { name: 'Jio Hotstar', logo: L('jio-hotstar'), ...SZ('jio-hotstar') },
+  { name: 'The Solved Skin', logo: L('the-solved-skin'), ...SZ('the-solved-skin') },
+  { name: 'Garnier Men', logo: L('garnier-men'), ...SZ('garnier-men') },
+  { name: 'Hajmola', logo: L('hajmola'), ...SZ('hajmola') },
+  { name: 'Bigboss Season 18', logo: L('bigboss-season-18'), ...SZ('bigboss-season-18') },
+  { name: 'ChatGPT', logo: L('chatgpt'), ...SZ('chatgpt') },
+  { name: 'The Bear House', logo: L('the-bear-house'), ...SZ('the-bear-house') },
+  { name: 'BruGold Coffee', logo: L('brugold-badge2'), ...SZ('brugold-badge2'), scale: 0.9 },
+  { name: 'Atomberg', logo: L('atomberg'), ...SZ('atomberg') },
+  { name: 'Loyka', logo: L('loyka'), ...SZ('loyka') },
+  { name: 'DTDC Courier', logo: L('dtdc-courier'), ...SZ('dtdc-courier') },
+  { name: 'UP Warriorz', logo: L('up-warriorz'), ...SZ('up-warriorz') },
+  { name: 'Zouk', logo: L('zouk'), ...SZ('zouk') },
+  { name: 'Realme', logo: L('realme'), ...SZ('realme') },
+  { name: 'Myntra Creator School', logo: L('myntra-creator-school'), ...SZ('myntra-creator-school') },
 ];
 
 export const BRAND_BY_NAME = Object.fromEntries(TICKER_BRANDS.map((b) => [b.name, b]));

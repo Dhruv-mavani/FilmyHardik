@@ -6,7 +6,7 @@ function BrandLogo({ name, className = '' }) {
   if (!b) return null;
   return (
     <span className={`logo-chip ${className}`.trim()} style={b.scale ? { '--s': b.scale } : undefined}>
-      <img src={b.logo} alt={name} draggable="false" />
+      <img src={b.logo} width={b.w} height={b.h} alt={name} decoding="async" draggable="false" />
     </span>
   );
 }

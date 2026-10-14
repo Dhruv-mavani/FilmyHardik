@@ -1,5 +1,6 @@
-import { EMAIL, PHONE_HREF, PHONE_TEXT, PLATFORMS, SECTIONS } from '../data';
+import { EMAIL, PLATFORMS, SECTIONS } from '../data';
 import { prefersReducedMotion } from '../hooks';
+import Arrow from './Arrow';
 
 const WORD = 'FILMYHARDIK';
 const NAV = [
@@ -11,9 +12,9 @@ const NAV = [
 
 /** Giant FILMYHARDIK text scrolling behind the footer, rows alternating direction. */
 const ROWS = [
-  { cls: 'm-out', dir: 'l', top: '4%' },
-  { cls: 'm-fill', dir: 'r', top: '40%' },
-  { cls: 'm-out', dir: 'l', top: '74%' },
+  { cls: 'm-out', dir: 'l', top: '14%' },
+  { cls: 'm-fill', dir: 'r', top: '50%' },
+  { cls: 'm-out', dir: 'l', top: '86%' },
 ];
 
 function MarqueeGroup() {
@@ -55,7 +56,7 @@ export default function Footer() {
           <span className="foot-cta-text">
             <span className="cta-layer">Let's make<br />something<br /><em>viral</em></span>
             <span className="cta-layer cta-alt" aria-hidden="true">Let's make<br />something<br /><em>viral</em></span>
-            <i className="foot-arrow" aria-hidden="true">&#8599;</i>
+            <i className="foot-arrow" aria-hidden="true"><Arrow dir="ur" /></i>
           </span>
         </a>
 
@@ -66,7 +67,7 @@ export default function Footer() {
               <a key={p.name} className="soc-row" href={p.href} target="_blank" rel="noopener">
                 <span className="soc-logo"><img src={p.logo} alt="" draggable="false" /></span>
                 <span className="soc-meta"><b>{p.name}</b><small>{p.handle}</small></span>
-                <span className="soc-arrow" aria-hidden="true">&rarr;</span>
+                <span className="soc-arrow" aria-hidden="true"><Arrow /></span>
               </a>
             ))}
           </nav>
@@ -78,18 +79,13 @@ export default function Footer() {
                 <a key={id} href={`#${id}`}>{label}</a>
               ))}
             </nav>
-            <div className="foot-contact">
-              <span className="mono foot-h">Say hello</span>
-              <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
-              <a href={PHONE_HREF}>{PHONE_TEXT}</a>
-            </div>
           </div>
         </div>
       </div>
 
       <div className="wrap foot-bottom">
         <span className="mono">&copy; {year} Filmyhardik. Made to be funny.</span>
-        <button type="button" className="to-top mono" onClick={toTop}>Back to top <span aria-hidden="true">&uarr;</span></button>
+        <button type="button" className="to-top mono" onClick={toTop}>Back to top <Arrow dir="u" /></button>
       </div>
     </footer>
   );

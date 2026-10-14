@@ -88,7 +88,9 @@ export default function Network() {
         let lw = Math.min(maxW, bh * k * aspect);
         let lh = lw / aspect;
         if (lh > bh * k) { lh = bh * k; lw = lh * aspect; }
-        n.logo = lh >= 8;
+        // very wide wordmarks (Mamaearth, Garnier) would shrink to a sliver on phones: keep them legible
+        if (lh < 11 && aspect > 3) { lh = 11; lw = Math.min(lh * aspect, 82); lh = lw / aspect; }
+        n.logo = lh >= 9;
         if (!n.logo) { n.R = n.r * sc; continue; }
         n.lw = lw; n.lh = lh;
         n.pw = lw + 14 * k; n.ph = lh + 10 * k;
@@ -136,21 +138,31 @@ export default function Network() {
         n.x = bx + (d > 1 ? dx / d * pull : 0);
         n.y = by + (d > 1 ? dy / d * pull : 0);
       }
-      // soft push-apart so drifting logo pills don't sit on top of each other
-      for (let i = 0; i < nodes.length; i++) {
-        const a = nodes[i];
-        for (let j = i + 1; j < nodes.length; j++) {
-          const b = nodes[j];
-          if (!a.logo || !b.logo) continue;
-          let dx = b.x - a.x, dy = b.y - a.y;
-          const d = Math.sqrt(dx * dx + dy * dy) || 0.01;
-          const min = (a.R + b.R) * 0.88;
-          if (d < min) {
-            const push = (min - d) / 2;
-            dx /= d; dy /= d;
-            a.x -= dx * push; a.y -= dy * push;
-            b.x += dx * push; b.y += dy * push;
+      // rectangle push-apart + edge clamp (three passes) so logo pills neither overlap nor get clipped
+      for (let pass = 0; pass < 3; pass++) {
+        for (let i = 0; i < nodes.length; i++) {
+          const a = nodes[i];
+          if (!a.logo) continue;
+          for (let j = i + 1; j < nodes.length; j++) {
+            const b = nodes[j];
+            if (!b.logo) continue;
+            const dx = b.x - a.x, dy = b.y - a.y;
+            const ox = (a.pw + b.pw) / 2 + 3 - Math.abs(dx);
+            const oy = (a.ph + b.ph) / 2 + 3 - Math.abs(dy);
+            if (ox <= 0 || oy <= 0) continue;
+            if (oy < ox) { // separate along the shorter overlap
+              const m = (dy >= 0 ? 1 : -1) * oy / 2;
+              a.y -= m; b.y += m;
+            } else {
+              const m = (dx >= 0 ? 1 : -1) * ox / 2;
+              a.x -= m; b.x += m;
+            }
           }
+        }
+        for (const n of nodes) {
+          if (!n.logo) continue;
+          n.x = Math.max(n.pw / 2 + 4, Math.min(W - n.pw / 2 - 4, n.x));
+          n.y = Math.max(n.ph / 2 + 4, Math.min(H - n.ph / 2 - 4, n.y));
         }
       }
     }

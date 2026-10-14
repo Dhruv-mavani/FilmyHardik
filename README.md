@@ -48,6 +48,15 @@ npm run preview   # serve the production build locally
         └── Reveal.jsx      # scroll-in wrapper
 ```
 
+## SEO, AEO, GEO and agent browsing
+
+- **Prerendered HTML:** `npm run build` renders the React app to static HTML (`scripts/prerender.mjs`), so crawlers and AI bots that don't run JavaScript still get the full page. The browser then hydrates it.
+- **SEO:** title, description, Open Graph and Twitter large-image card (`public/og-image.png`), `robots.txt`, `sitemap.xml`, manifest and icons, a semantic heading structure and a skip link.
+- **AEO (answer engines):** a visible FAQ section (`src/components/Faq.jsx`) with the same text exposed as `FAQPage` JSON-LD, plus `Person`, `WebSite` and `ProfilePage` schema. All facts live in `src/seo-data.js`.
+- **GEO (generative engines):** `/llms.txt` and `/llms-full.txt`, and a `robots.txt` that explicitly allows GPTBot, ClaudeBot, PerplexityBot, Google-Extended and other AI crawlers. Edit `buildRobots` in `src/seo-data.js` to restrict any of them.
+- **Agentic browsing:** labelled landmarks and form fields, stable ids, and WebMCP tools (`src/agent.js`) that expose the profile, brand list, FAQ and a "prepare collaboration brief" action to browser agents. The tools never send anything on their own.
+- **Live domain:** canonical, `og:url`, `og:image` and the sitemap need the real URL. Set `SITE_URL` at build time, or deploy on Vercel (it provides `VERCEL_PROJECT_PRODUCTION_URL`). Without it, those tags are skipped.
+
 ## Editing content
 
 Most copy lives in `src/data.js`: stats, platform cards, brand tiles, ticker and chips, network nodes, and contact details. Colors and fonts are CSS variables at the top of `src/index.css`.

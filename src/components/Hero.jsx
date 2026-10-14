@@ -1,5 +1,8 @@
+import { useEffect, useRef, useState } from 'react';
 import { TICKER_BRANDS } from '../data';
 import Network from './Network';
+
+const BADGE_TEXT = 'TOTAL VIEWS • AND COUNTING • ';
 
 const LINES = [
   { text: 'FILMY', start: 0, cls: 'line' },
@@ -11,9 +14,31 @@ function TickerGroup({ hidden }) {
     <div className="tgroup" aria-hidden={hidden || undefined}>
       {TICKER_BRANDS.map((b) => (
         <span key={b.name} className="logo-chip" style={b.scale ? { '--s': b.scale } : undefined}>
-          <img src={b.logo} alt={hidden ? '' : b.name} decoding="async" draggable="false" />
+          <img src={b.logo} width={b.w} height={b.h} alt={hidden ? '' : b.name} decoding="async" draggable="false" />
         </span>
       ))}
+    </div>
+  );
+}
+
+/** Marquee track: waits for every logo to decode before it starts moving (no blank or jumping chips). */
+function TickerTrack() {
+  const ref = useRef(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    const imgs = [...ref.current.querySelectorAll('img')];
+    const decoded = Promise.all(imgs.map((i) => (i.decode ? i.decode().catch(() => {}) : Promise.resolve())));
+    const timeout = new Promise((r) => setTimeout(r, 6000)); // never block the marquee on a slow image
+    Promise.race([decoded, timeout]).then(() => { if (alive) setReady(true); });
+    return () => { alive = false; };
+  }, []);
+
+  return (
+    <div className={`track${ready ? ' ready' : ''}`} ref={ref}>
+      <TickerGroup />
+      <TickerGroup hidden />
     </div>
   );
 }
@@ -45,9 +70,11 @@ export default function Hero() {
           <Network />
           <div className="badge" aria-hidden="true">
             <svg viewBox="0 0 200 200">
-              <defs><path id="circ" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0" /></defs>
               <circle cx="100" cy="100" r="98" fill="#FFD60A" />
-              <text textLength="478" lengthAdjust="spacing"><textPath href="#circ">TOTAL VIEWS • AND COUNTING • </textPath></text>
+              {/* one glyph per angle step: always wraps the full circle (textLength/textPath is ignored on many phones) */}
+              {[...BADGE_TEXT].map((c, i) => (
+                <text key={i} x="100" y="22" textAnchor="middle" transform={`rotate(${(i * 360 / BADGE_TEXT.length).toFixed(3)} 100 100)`}>{c}</text>
+              ))}
             </svg>
             <div className="badge-num">350M+</div>
           </div>
@@ -58,10 +85,7 @@ export default function Hero() {
         </div>
       </div>
       <div className="ticker" aria-label="Brands worked with">
-        <div className="track">
-          <TickerGroup />
-          <TickerGroup hidden />
-        </div>
+        <TickerTrack />
       </div>
     </section>
   );

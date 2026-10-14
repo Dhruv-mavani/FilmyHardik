@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { EMAIL, PHONE_HREF, PHONE_TEXT } from '../data';
 import Reveal from './Reveal';
+import Arrow from './Arrow';
 
 function CopyButton({ text, targetRef }) {
   const [label, setLabel] = useState('Copy');
@@ -61,13 +62,13 @@ export default function Contact() {
             <ReachRow label="Phone" href={PHONE_HREF} text={PHONE_TEXT} copy={PHONE_TEXT} />
           </div>
         </Reveal>
-        <Reveal as="form" className="form" autoComplete="off" onSubmit={(e) => e.preventDefault()}>
-          <h3>Send a brief</h3>
-          <div className="field"><label htmlFor="f-name">Your name</label><input id="f-name" type="text" placeholder="Your name" value={form.name} onChange={set('name')} /></div>
-          <div className="field"><label htmlFor="f-brand">Brand</label><input id="f-brand" type="text" placeholder="Brand or company" value={form.brand} onChange={set('brand')} /></div>
-          <div className="field"><label htmlFor="f-brief">What do you have in mind?</label><textarea id="f-brief" rows={4} placeholder="Product, timeline, platforms" value={form.brief} onChange={set('brief')} /></div>
-          <a className="btn solid" style={{ alignSelf: 'flex-start', background: 'var(--ink)', color: 'var(--yellow)', borderColor: 'var(--ink)', boxShadow: '5px 5px 0 var(--paper)' }} href={mailto}>
-            Email my brief <span aria-hidden="true">&rarr;</span>
+        <Reveal as="form" className="form" aria-labelledby="brief-title" onSubmit={(e) => e.preventDefault()}>
+          <h3 id="brief-title">Send a brief</h3>
+          <div className="field"><label htmlFor="f-name">Your name</label><input id="f-name" name="name" autoComplete="name" type="text" placeholder="Your name" value={form.name} onChange={set('name')} /></div>
+          <div className="field"><label htmlFor="f-brand">Brand</label><input id="f-brand" name="brand" autoComplete="organization" type="text" placeholder="Brand or company" value={form.brand} onChange={set('brand')} /></div>
+          <div className="field"><label htmlFor="f-brief">What do you have in mind?</label><textarea id="f-brief" name="brief" autoComplete="off" rows={4} placeholder="Product, timeline, platforms" value={form.brief} onChange={set('brief')} /></div>
+          <a id="send-brief" className="btn solid" style={{ alignSelf: 'flex-start', background: 'var(--ink)', color: 'var(--yellow)', borderColor: 'var(--ink)', boxShadow: '5px 5px 0 var(--paper)' }} href={mailto}>
+            Email my brief <Arrow />
           </a>
           <p className="fine">This opens your email app with the brief filled in. If nothing opens, write to {EMAIL}.</p>
         </Reveal>

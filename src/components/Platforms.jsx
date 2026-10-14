@@ -1,5 +1,6 @@
 import { PLATFORMS } from '../data';
 import Reveal from './Reveal';
+import Arrow from './Arrow';
 
 function Card({ p }) {
   const onMove = (e) => {
@@ -23,7 +24,7 @@ function Card({ p }) {
       <div className="pnum">{p.num}</div>
       <div className="mono cap">{p.cap}</div>
       <div className="handle">{p.handle}</div>
-      <span className="go">{p.cta} <span aria-hidden="true">&rarr;</span></span>
+      <span className="go">{p.cta} <Arrow /></span>
     </Reveal>
   );
 }
