@@ -92,9 +92,9 @@ section{position:relative}
 .slab{background:var(--yellow);color:var(--ink);clip-path:polygon(0 4vw,100% 0,100% calc(100% - 4vw),0 100%);padding-block:calc(4vw + 64px);margin-top:40px}
 .slab .mono{color:var(--ink)}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(230px,100%),1fr));gap:20px 28px}
-.stat{border-top:4px solid var(--ink);padding-top:14px;display:flex;flex-direction:column;gap:6px;min-width:0}
-.num{font-family:var(--font-display);font-size:clamp(40px,8vw,104px);line-height:.95;font-variant-numeric:tabular-nums}
-.stat.big .num{font-size:clamp(48px,10vw,132px)}
+.stat{container-type:inline-size;border-top:4px solid var(--ink);padding-top:14px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.num{font-family:var(--font-display);font-size:min(104px,24cqw);white-space:nowrap;line-height:.95;font-variant-numeric:tabular-nums}
+.stat.big .num{font-size:min(132px,24cqw)}
 
 /* platform cards */
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(250px,100%),1fr));gap:20px}
