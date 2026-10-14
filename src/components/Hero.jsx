@@ -49,7 +49,10 @@ export default function Hero() {
             </svg>
             <div className="badge-num">350M+</div>
           </div>
-          <p className="net-hint mono">Move your cursor. Everything is connected.</p>
+          <p className="net-hint mono">
+            <span className="hint-pointer">Move your cursor.</span>
+            <span className="hint-touch">Touch, hold and swipe.</span> Everything is connected.
+          </p>
         </div>
       </div>
       <div className="ticker" aria-label="Brands worked with">

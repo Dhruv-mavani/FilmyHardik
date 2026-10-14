@@ -7,10 +7,33 @@ const YEL = '#FFD60A';
 const PAPER = '#FFF9E0';
 const TAU = 6.2832;
 
+// Vibration API (Android/Chrome). iOS Safari has no vibrate(), but toggling a
+// hidden `switch` checkbox fires the system haptic on iOS 18+.
+let iosSwitch = null;
+function haptic(pattern) {
+  if (prefersReducedMotion()) return;
+  try {
+    if (navigator.vibrate) { navigator.vibrate(pattern); return; }
+    if (typeof document === 'undefined') return;
+    if (!iosSwitch) {
+      const label = document.createElement('label');
+      label.setAttribute('aria-hidden', 'true');
+      label.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0;pointer-events:none';
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.setAttribute('switch', '');
+      label.appendChild(input);
+      document.body.appendChild(label);
+      iosSwitch = label;
+    }
+    iosSwitch.click();
+  } catch { /* haptics are best-effort */ }
+}
+
 function buildNodes() {
   const nodes = NET_PLATFORMS.map((p, i) => ({
     type: 'p', short: p[0], label: p[1], sub: p[2], r: 19, a0: i * Math.PI / 2 + Math.PI / 4,
-    ring: 0.36, dir: 1, spd: 0.00009, ph: i * 1.7, flash: 0, x: 0, y: 0, near: 0, d: 9999, R: 19,
+    ring: 0.36, ring0: 0.36, dir: 1, spd: 0.00009, ph: i * 1.7, flash: 0, x: 0, y: 0, near: 0, d: 9999, R: 19,
   }));
   NET_BRANDS.forEach((b, i) => {
     const inA = i < 8;
@@ -18,7 +41,7 @@ function buildNodes() {
     const cnt = inA ? 8 : 11;
     nodes.push({
       type: 'b', label: b[0], r: b[1], sub: b[2], a0: k / cnt * Math.PI * 2 + (inA ? 0.3 : 0),
-      ring: inA ? 0.64 : 0.9, dir: inA ? -1 : 1, spd: inA ? 0.00007 : 0.00005, ph: i * 0.9,
+      ring: inA ? 0.64 : 0.9, ring0: inA ? 0.64 : 0.9, dir: inA ? -1 : 1, spd: inA ? 0.00007 : 0.00005, ph: i * 0.9,
       flash: 0, x: 0, y: 0, near: 0, d: 9999, R: b[1],
     });
   });
@@ -35,6 +58,7 @@ export default function Network() {
     const reduce = prefersReducedMotion();
 
     let W = 0, H = 0, dpr = 1, cx = 0, cy = 0, R = 100, sc = 1;
+    let pressed = false, hovNode = null, lastBuzz = 0;
     let mx = -9999, my = -9999, clock = 0, last = 0, acc = 0, running = false, raf = 0;
     const center = { x: 0, y: 0, r: 30, flash: 0 };
     const nodes = buildNodes();
@@ -50,7 +74,11 @@ export default function Network() {
       cx = W / 2; cy = H / 2; R = Math.min(W, H) / 2 - 26;
       sc = Math.max(0.62, Math.min(1.15, R / 300));
       center.r = Math.max(24, R * 0.115);
-      nodes.forEach((n) => { n.R = n.r * sc; });
+      const small = R < 170;
+      nodes.forEach((n) => {
+        n.R = n.r * sc;
+        n.ring = n.type === 'p' ? (small ? 0.5 : 0.36) : n.ring0 + (small && n.ring0 < 0.7 ? 0.1 : 0);
+      });
       if (!running) { place(clock); draw(clock); }
     }
 
@@ -64,8 +92,10 @@ export default function Network() {
         n.d = d;
         n.near = d < 150 ? 1 - d / 150 : 0;
         const pull = n.near * 16;
-        n.x = bx + (d > 1 ? dx / d * pull : 0);
-        n.y = by + (d > 1 ? dy / d * pull : 0);
+        // nodes under the pointer tremble; stronger while pressed
+        const amp = n.near * (pressed ? 3.2 : 1.1);
+        n.x = bx + (d > 1 ? dx / d * pull : 0) + Math.sin(t / 15 + n.ph * 7) * amp;
+        n.y = by + (d > 1 ? dy / d * pull : 0) + Math.cos(t / 13 + n.ph * 5) * amp;
       }
     }
 
@@ -157,8 +187,7 @@ export default function Network() {
         ctx.beginPath(); ctx.arc(px, py, 3.2, 0, TAU); ctx.fill(); ctx.shadowBlur = 0;
       }
 
-      let hov = null, hd = 1e9;
-      for (i = 0; i < nodes.length; i++) { a = nodes[i]; if (a.d < a.R + 22 && a.d < hd) { hd = a.d; hov = a; } }
+      const hov = findHover();
 
       for (i = 0; i < nodes.length; i++) {
         a = nodes[i];
@@ -205,11 +234,28 @@ export default function Network() {
       }
     }
 
+    function findHover() {
+      let hov = null, hd = 1e9;
+      for (const a of nodes) if (a.d < a.R + 22 && a.d < hd) { hd = a.d; hov = a; }
+      return hov;
+    }
+
+    function buzz() {
+      const now = performance.now();
+      const hov = findHover();
+      if (hov !== hovNode) {
+        hovNode = hov;
+        if (hov && now - lastBuzz > 60) { lastBuzz = now; haptic(hov.type === 'p' ? [22] : 9); }
+      } else if (pressed && mx > -9000 && now - lastBuzz > 110) {
+        lastBuzz = now; haptic(5); // soft ticks while holding and swiping
+      }
+    }
+
     function frame(ts) {
       if (!running) return;
       const dt = Math.min(50, ts - last);
       last = ts; clock += dt;
-      place(clock); step(dt); draw(clock);
+      place(clock); buzz(); step(dt); draw(clock);
       raf = requestAnimationFrame(frame);
     }
     function start() { if (running || reduce) return; running = true; last = performance.now(); raf = requestAnimationFrame(frame); }
@@ -221,9 +267,14 @@ export default function Network() {
       if (!running) { place(clock); draw(clock); }
     }
     function leave() { mx = -9999; my = -9999; if (!running) { place(clock); draw(clock); } }
+    function down(e) { pressed = true; setPtr(e); lastBuzz = performance.now(); haptic(16); }
+    function up() { pressed = false; }
+    function out() { pressed = false; hovNode = null; leave(); }
     canvas.addEventListener('pointermove', setPtr);
-    canvas.addEventListener('pointerdown', setPtr);
-    canvas.addEventListener('pointerleave', leave);
+    canvas.addEventListener('pointerdown', down);
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+    canvas.addEventListener('pointerleave', out);
 
     const ro = new ResizeObserver(size);
     ro.observe(canvas);
@@ -236,8 +287,10 @@ export default function Network() {
     return () => {
       stop(); ro.disconnect(); io.disconnect();
       canvas.removeEventListener('pointermove', setPtr);
-      canvas.removeEventListener('pointerdown', setPtr);
-      canvas.removeEventListener('pointerleave', leave);
+      canvas.removeEventListener('pointerdown', down);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+      canvas.removeEventListener('pointerleave', out);
     };
   }, []);
 
