@@ -92,10 +92,8 @@ export default function Network() {
         n.d = d;
         n.near = d < 150 ? 1 - d / 150 : 0;
         const pull = n.near * 16;
-        // nodes under the pointer tremble; stronger while pressed
-        const amp = n.near * (pressed ? 3.2 : 1.1);
-        n.x = bx + (d > 1 ? dx / d * pull : 0) + Math.sin(t / 15 + n.ph * 7) * amp;
-        n.y = by + (d > 1 ? dy / d * pull : 0) + Math.cos(t / 13 + n.ph * 5) * amp;
+        n.x = bx + (d > 1 ? dx / d * pull : 0);
+        n.y = by + (d > 1 ? dy / d * pull : 0);
       }
     }
 
