@@ -32,7 +32,6 @@ export default function Brands() {
             </Reveal>
           ))}
         </div>
-        <Reveal as="p" className="note mono">Bars use a log scale, so the 9M+ campaign doesn't squash everything else.</Reveal>
         <Reveal className="sec-head" style={{ margin: '44px 0 6px' }}>
           <span className="mono">And these too. 350M+ views in total.</span>
         </Reveal>
