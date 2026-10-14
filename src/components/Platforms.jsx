@@ -19,7 +19,7 @@ function Card({ p }) {
   };
   return (
     <Reveal as="a" className={`card${p.yel ? ' yel' : ''}`} href={p.href} target="_blank" rel="noopener" onPointerMove={onMove} onPointerLeave={onLeave}>
-      <div className="pname">{p.name}</div>
+      <span className="plogo"><img src={p.logo} alt={p.name} draggable="false" /></span>
       <div className="pnum">{p.num}</div>
       <div className="mono cap">{p.cap}</div>
       <div className="handle">{p.handle}</div>

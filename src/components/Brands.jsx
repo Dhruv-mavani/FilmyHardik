@@ -1,5 +1,15 @@
-import { BRAND_TILES, CHIPS } from '../data';
+import { BRAND_BY_NAME, BRAND_TILES, CHIPS } from '../data';
 import Reveal from './Reveal';
+
+function BrandLogo({ name, className = '' }) {
+  const b = BRAND_BY_NAME[name];
+  if (!b) return null;
+  return (
+    <span className={`logo-chip ${className}`.trim()} style={b.scale ? { '--s': b.scale } : undefined}>
+      <img src={b.logo} alt={name} draggable="false" />
+    </span>
+  );
+}
 
 export default function Brands() {
   return (
@@ -12,9 +22,10 @@ export default function Brands() {
         <div className="bento">
           {BRAND_TILES.map((t) => (
             <Reveal key={t.name} className={`tile ${t.size}`} style={{ '--w': t.w }}>
+              <BrandLogo name={t.name} className="tile-logo" />
               {t.eyebrow && <div className="mono" style={t.size === 'mid' ? { color: 'var(--yellow)' } : undefined}>{t.eyebrow}</div>}
               <div className="tn">{t.num}</div>
-              <div className="tb">{t.name}</div>
+              <div className="tb sr">{t.name}</div>
               {t.desc && <div style={t.size === 'mid' ? { color: 'var(--muted)' } : undefined}>{t.desc}</div>}
               {t.size === 'sm' && <div className="mono" style={{ color: 'var(--muted)' }}>Views</div>}
               <div className="bar"><i /></div>
@@ -26,7 +37,7 @@ export default function Brands() {
           <span className="mono">And these too. 350M+ views in total.</span>
         </Reveal>
         <Reveal className="chips">
-          {CHIPS.map((c) => <span key={c} className="chip">{c}</span>)}
+          {CHIPS.map((c) => <BrandLogo key={c} name={c} className="mini" />)}
         </Reveal>
       </div>
     </section>

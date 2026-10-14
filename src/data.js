@@ -29,6 +29,8 @@ export const TICKER_BRANDS = [
   { name: 'Myntra Creator School', logo: L('myntra-creator-school') },
 ];
 
+export const BRAND_BY_NAME = Object.fromEntries(TICKER_BRANDS.map((b) => [b.name, b]));
+
 export const STATS = [
   { to: 350, suffix: 'M+', label: 'Total views', big: true },
   { to: 300, suffix: 'M+', label: 'Views on Instagram' },
@@ -37,10 +39,10 @@ export const STATS = [
 ];
 
 export const PLATFORMS = [
-  { name: 'Instagram', num: '50k+', cap: 'Followers', handle: '@filmyhardik', cta: 'Follow', href: 'https://www.instagram.com/filmyhardik/', yel: true },
-  { name: 'YouTube', num: '25k+', cap: 'Subscribers', handle: '@filmyyhardik', cta: 'Subscribe', href: 'https://www.youtube.com/@filmyyhardik' },
-  { name: 'Snapchat', num: '11k+', cap: 'Followers', handle: '@filmyhardik', cta: 'Add me', href: 'https://www.snapchat.com/@filmyhardik' },
-  { name: 'Facebook', num: 'Reels', cap: 'Page', handle: 'Filmyhardik', cta: 'Follow', href: 'https://www.facebook.com/Filmyhardik/' },
+  { name: 'Instagram', logo: L('instagram'), num: '50k+', cap: 'Followers', handle: '@filmyhardik', cta: 'Follow', href: 'https://www.instagram.com/filmyhardik/', yel: true },
+  { name: 'YouTube', logo: L('youtube'), num: '25k+', cap: 'Subscribers', handle: '@filmyyhardik', cta: 'Subscribe', href: 'https://www.youtube.com/@filmyyhardik' },
+  { name: 'Snapchat', logo: L('snapchat'), num: '11k+', cap: 'Followers', handle: '@filmyhardik', cta: 'Add me', href: 'https://www.snapchat.com/@filmyhardik' },
+  { name: 'Facebook', logo: L('facebook'), num: 'Reels', cap: 'Page', handle: 'Filmyhardik', cta: 'Follow', href: 'https://www.facebook.com/Filmyhardik/' },
 ];
 
 export const BRAND_TILES = [
