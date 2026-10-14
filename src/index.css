@@ -49,12 +49,12 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
 .hero{position:relative;padding:118px 0 56px;overflow:hidden}
 .hero::before{content:"";position:absolute;inset:0;background-image:linear-gradient(rgba(255,214,10,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,214,10,.05) 1px,transparent 1px);background-size:44px 44px;-webkit-mask-image:radial-gradient(ellipse at 70% 45%,#000 20%,transparent 72%);mask-image:radial-gradient(ellipse at 70% 45%,#000 20%,transparent 72%)}
 .hero-grid{display:flex;flex-wrap:wrap;gap:36px 24px;align-items:center}
-.hero-copy{flex:1 1 440px;min-width:0;display:flex;flex-direction:column;gap:24px}
+.hero-copy{container-type:inline-size;flex:1 1 440px;min-width:0;display:flex;flex-direction:column;gap:24px}
 .eyebrow{display:flex;align-items:center;gap:10px;color:var(--yellow)}
 .live{width:10px;height:10px;border-radius:50%;background:var(--hot);box-shadow:0 0 0 0 rgba(255,59,48,.7);animation:ping 1.8s infinite}
 @keyframes ping{70%{box-shadow:0 0 0 12px rgba(255,59,48,0)}100%{box-shadow:0 0 0 0 rgba(255,59,48,0)}}
-.title{font-size:clamp(40px,12.5vw,170px);line-height:.88;letter-spacing:-.015em;display:flex;flex-direction:column}
-.line{display:block}
+.title{font-size:min(170px,21cqw);line-height:.88;letter-spacing:-.015em;display:flex;flex-direction:column}
+.line{display:block;white-space:nowrap}
 .line.y{color:var(--yellow)}
 .ch{display:inline-block;animation:rise .75s cubic-bezier(.2,.9,.25,1) backwards;animation-delay:calc(var(--i) * 70ms);transition:transform .2s cubic-bezier(.2,.9,.25,1)}
 .ch:hover{transform:translateY(-10px) rotate(-5deg)}
@@ -63,7 +63,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
 .sub{color:var(--muted);max-width:33em;margin:0}
 .cta-row{display:flex;flex-wrap:wrap;gap:16px;align-items:center}
 .net-wrap{flex:1 1 440px;min-width:0;position:relative;max-width:640px;margin-inline:auto}
-#net{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;display:block;width:100%;aspect-ratio:1/1;max-width:100%;touch-action:pan-y;cursor:crosshair}
+#net{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;display:block;width:100%;aspect-ratio:1/1;max-width:100%;touch-action:none;cursor:crosshair}
 .net-hint{margin:8px 0 0;text-align:center;color:var(--muted)}
 .hint-touch{display:none}
 @media (hover:none){.hint-pointer{display:none}.hint-touch{display:inline}}
@@ -77,9 +77,9 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{
 /* marquee */
 .ticker{background:var(--yellow);color:var(--ink);overflow:hidden;padding:16px 0;transform:rotate(-1.2deg);margin:18px -20px 0;border-block:3px solid var(--ink)}
 .track{display:flex;width:max-content;animation:scroll 55s linear infinite}
-.tgroup{display:flex;flex-shrink:0;align-items:center;gap:34px;padding-right:34px}
-.tgroup span{font-family:var(--font-display);font-size:26px;text-transform:uppercase;white-space:nowrap}
-.tgroup i{font-style:normal;font-family:var(--font-display);font-size:26px;opacity:.55}
+.tgroup{display:flex;flex-shrink:0;align-items:center;gap:22px;padding-right:22px}
+.logo-chip{display:grid;place-items:center;height:68px;padding:0 24px;background:#fff;border:3px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--ink)}
+.logo-chip img{display:block;height:calc(44px*var(--s,1));width:auto;max-width:170px;object-fit:contain;user-select:none}
 @keyframes scroll{to{transform:translateX(-50%)}}
 
 /* sections */
@@ -177,9 +177,6 @@ footer{padding:28px 0 40px;border-top:1px solid var(--line)}
 .reveal.arm .bar i{width:0}
 
 /* small phones, down to 280px */
-@media (max-width:520px){
-  .title{font-size:clamp(40px,18vw,92px)}
-}
 @media (max-width:480px){
   .sec{padding-block:64px}
   .btn{font-size:16px;padding:13px 22px}
@@ -212,8 +209,9 @@ footer{padding:28px 0 40px;border-top:1px solid var(--line)}
   .badge{width:84px;height:84px;right:0;top:-4px}
   .badge-num{font-size:16px}
   .ticker{margin-inline:-16px}
-  .tgroup span,.tgroup i{font-size:20px}
-  .tgroup{gap:24px;padding-right:24px}
+  .logo-chip{height:54px;padding:0 16px;border-radius:13px;border-width:2px}
+  .logo-chip img{height:calc(32px*var(--s,1));max-width:120px}
+  .tgroup{gap:16px;padding-right:16px}
   .sec{padding-block:52px}
   .slab{padding-block:calc(4vw + 44px)}
   .sec-head{margin-bottom:28px}

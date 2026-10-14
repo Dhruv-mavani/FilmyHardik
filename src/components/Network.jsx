@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { NET_BRANDS, NET_PLATFORMS } from '../data';
+import { NET_BRANDS, NET_PLATFORMS, TICKER_BRANDS } from '../data';
 import { prefersReducedMotion } from '../hooks';
 
 const INK = '#0A0A08';
@@ -30,9 +30,21 @@ function haptic(pattern) {
   } catch { /* haptics are best-effort */ }
 }
 
+const BRAND_LOGOS = Object.fromEntries(TICKER_BRANDS.map((b) => [b.name, b.logo]));
+
+// max logo box [w, h] at desktop size, by node importance
+function logoBox(n) {
+  if (n.type === 'p') return [72, 24];
+  if (n.r >= 18) return [78, 30];
+  if (n.r >= 14) return [64, 26];
+  if (n.r >= 10) return [54, 22];
+  if (n.r >= 7) return [46, 18];
+  return [42, 16];
+}
+
 function buildNodes() {
   const nodes = NET_PLATFORMS.map((p, i) => ({
-    type: 'p', short: p[0], label: p[1], sub: p[2], r: 19, a0: i * Math.PI / 2 + Math.PI / 4,
+    type: 'p', short: p[0], label: p[1], sub: p[2], logoSrc: p[3], r: 19, a0: i * Math.PI / 2 + Math.PI / 4,
     ring: 0.36, ring0: 0.36, dir: 1, spd: 0.00009, ph: i * 1.7, flash: 0, x: 0, y: 0, near: 0, d: 9999, R: 19,
   }));
   NET_BRANDS.forEach((b, i) => {
@@ -40,7 +52,7 @@ function buildNodes() {
     const k = inA ? i : i - 8;
     const cnt = inA ? 8 : 11;
     nodes.push({
-      type: 'b', label: b[0], r: b[1], sub: b[2], a0: k / cnt * Math.PI * 2 + (inA ? 0.3 : 0),
+      type: 'b', label: b[0], r: b[1], sub: b[2], logoSrc: BRAND_LOGOS[b[0]], a0: k / cnt * Math.PI * 2 + (inA ? 0.3 : 0),
       ring: inA ? 0.64 : 0.9, ring0: inA ? 0.64 : 0.9, dir: inA ? -1 : 1, spd: inA ? 0.00007 : 0.00005, ph: i * 0.9,
       flash: 0, x: 0, y: 0, near: 0, d: 9999, R: b[1],
     });
@@ -58,11 +70,38 @@ export default function Network() {
     const reduce = prefersReducedMotion();
 
     let W = 0, H = 0, dpr = 1, cx = 0, cy = 0, R = 100, sc = 1;
-    let pressed = false, hovNode = null, lastBuzz = 0;
+    let pressed = false, hovNode = null, lastBuzz = 0, k = 1;
     let mx = -9999, my = -9999, clock = 0, last = 0, acc = 0, running = false, raf = 0;
     const center = { x: 0, y: 0, r: 30, flash: 0 };
     const nodes = buildNodes();
     const pulses = [];
+
+    // Fit each logo into its box and size the white pill around it.
+    // Logos that would render too small fall back to the plain dot.
+    function layout() {
+      for (const n of nodes) {
+        const img = n.img;
+        if (!img || !img.naturalWidth) { n.logo = false; continue; }
+        const [bw, bh] = logoBox(n);
+        const aspect = img.naturalWidth / img.naturalHeight;
+        const maxW = bw * k * (aspect > 3 ? 1.4 : 1); // wordmarks get extra width
+        let lw = Math.min(maxW, bh * k * aspect);
+        let lh = lw / aspect;
+        if (lh > bh * k) { lh = bh * k; lw = lh * aspect; }
+        n.logo = lh >= 8;
+        if (!n.logo) { n.R = n.r * sc; continue; }
+        n.lw = lw; n.lh = lh;
+        n.pw = lw + 14 * k; n.ph = lh + 10 * k;
+        n.R = Math.max(n.pw, n.ph) / 2;
+      }
+    }
+
+    nodes.forEach((n) => {
+      if (!n.logoSrc) return;
+      const img = new Image();
+      img.onload = () => { n.img = img; layout(); if (!running) { place(clock); draw(clock); } };
+      img.src = n.logoSrc;
+    });
 
     function size() {
       const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -79,6 +118,8 @@ export default function Network() {
         n.R = n.r * sc;
         n.ring = n.type === 'p' ? (small ? 0.5 : 0.36) : n.ring0 + (small && n.ring0 < 0.7 ? 0.1 : 0);
       });
+      k = Math.max(0.6, Math.min(1.25, R / 230));
+      layout();
       if (!running) { place(clock); draw(clock); }
     }
 
@@ -94,6 +135,23 @@ export default function Network() {
         const pull = n.near * 16;
         n.x = bx + (d > 1 ? dx / d * pull : 0);
         n.y = by + (d > 1 ? dy / d * pull : 0);
+      }
+      // soft push-apart so drifting logo pills don't sit on top of each other
+      for (let i = 0; i < nodes.length; i++) {
+        const a = nodes[i];
+        for (let j = i + 1; j < nodes.length; j++) {
+          const b = nodes[j];
+          if (!a.logo || !b.logo) continue;
+          let dx = b.x - a.x, dy = b.y - a.y;
+          const d = Math.sqrt(dx * dx + dy * dy) || 0.01;
+          const min = (a.R + b.R) * 0.88;
+          if (d < min) {
+            const push = (min - d) / 2;
+            dx /= d; dy /= d;
+            a.x -= dx * push; a.y -= dy * push;
+            b.x += dx * push; b.y += dy * push;
+          }
+        }
       }
     }
 
@@ -148,6 +206,18 @@ export default function Network() {
       ctx.fillStyle = color; ctx.fillText(txt, x, y);
     }
 
+    function drawPill(a, isH) {
+      const w = a.pw, h = a.ph, x = a.x - w / 2, y = a.y - h / 2;
+      ctx.shadowColor = YEL; ctx.shadowBlur = 8 + a.flash * 26 + a.near * 12;
+      ctx.fillStyle = '#fff';
+      rrect(x, y, w, h, Math.min(h / 2, 12 * k)); ctx.fill(); ctx.shadowBlur = 0;
+      ctx.lineWidth = isH ? 3 : 2;
+      ctx.strokeStyle = isH ? YEL : a.type === 'p' ? 'rgba(255,214,10,.9)' : 'rgba(255,214,10,.5)';
+      ctx.stroke();
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(a.img, a.x - a.lw / 2, a.y - a.lh / 2, a.lw, a.lh);
+    }
+
     function draw(t) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, W, H);
@@ -190,6 +260,7 @@ export default function Network() {
       for (i = 0; i < nodes.length; i++) {
         a = nodes[i];
         const isH = a === hov;
+        if (a.logo) { drawPill(a, isH); continue; }
         if (a.type === 'b') {
           ctx.shadowColor = YEL; ctx.shadowBlur = 10 + a.flash * 26 + a.near * 14;
           ctx.fillStyle = isH ? PAPER : YEL;
@@ -212,6 +283,7 @@ export default function Network() {
 
       for (i = 0; i < nodes.length; i++) {
         a = nodes[i];
+        if (a.logo) continue;
         if (a.type === 'p') label(a.label, a.x, a.y + a.R + 14, Math.round(12 * Math.max(0.85, sc)), PAPER);
         else if (a.r >= 14) label(a.label, a.x, a.y + a.R + 13, Math.round(12 * Math.max(0.85, sc)), YEL);
       }
@@ -243,9 +315,9 @@ export default function Network() {
       const hov = findHover();
       if (hov !== hovNode) {
         hovNode = hov;
-        if (hov && now - lastBuzz > 60) { lastBuzz = now; haptic(hov.type === 'p' ? [22] : 9); }
+        if (hov && now - lastBuzz > 60) { lastBuzz = now; haptic(hov.type === 'p' ? 35 : 18); }
       } else if (pressed && mx > -9000 && now - lastBuzz > 110) {
-        lastBuzz = now; haptic(5); // soft ticks while holding and swiping
+        lastBuzz = now; haptic(12); // soft ticks while holding and swiping
       }
     }
 
@@ -253,7 +325,7 @@ export default function Network() {
       if (!running) return;
       const dt = Math.min(50, ts - last);
       last = ts; clock += dt;
-      place(clock); buzz(); step(dt); draw(clock);
+      place(clock); step(dt); draw(clock);
       raf = requestAnimationFrame(frame);
     }
     function start() { if (running || reduce) return; running = true; last = performance.now(); raf = requestAnimationFrame(frame); }
@@ -262,10 +334,12 @@ export default function Network() {
     function setPtr(e) {
       const r = canvas.getBoundingClientRect();
       mx = e.clientX - r.left; my = e.clientY - r.top;
-      if (!running) { place(clock); draw(clock); }
+      place(clock);
+      buzz();
+      if (!running) draw(clock);
     }
     function leave() { mx = -9999; my = -9999; if (!running) { place(clock); draw(clock); } }
-    function down(e) { pressed = true; setPtr(e); lastBuzz = performance.now(); haptic(16); }
+    function down(e) { pressed = true; setPtr(e); lastBuzz = performance.now(); haptic(28); }
     function up() { pressed = false; }
     function out() { pressed = false; hovNode = null; leave(); }
     canvas.addEventListener('pointermove', setPtr);

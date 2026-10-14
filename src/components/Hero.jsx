@@ -10,8 +10,10 @@ function TickerGroup({ hidden }) {
   return (
     <div className="tgroup" aria-hidden={hidden || undefined}>
       {TICKER_BRANDS.map((b) => (
-        <span key={b}>{b}</span>
-      )).flatMap((s, i) => [s, <i key={`s${i}`}>/</i>])}
+        <span key={b.name} className="logo-chip" style={b.scale ? { '--s': b.scale } : undefined}>
+          <img src={b.logo} alt={hidden ? '' : b.name} decoding="async" draggable="false" />
+        </span>
+      ))}
     </div>
   );
 }
